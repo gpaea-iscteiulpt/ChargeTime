@@ -1,4 +1,4 @@
-package com.tese.parkaid;
+package com.tese.chargingtime;
 
 import android.Manifest;
 import android.content.Context;
@@ -8,7 +8,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.location.LocationManager;
-import android.net.Uri;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -24,7 +23,6 @@ import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -36,16 +34,13 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import org.w3c.dom.Text;
-
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static android.location.LocationManager.GPS_PROVIDER;
-import static com.tese.parkaid.Constants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION;
-import static com.tese.parkaid.Constants.PERMISSIONS_REQUEST_ENABLE_GPS;
+import static com.tese.chargingtime.Constants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION;
+import static com.tese.chargingtime.Constants.PERMISSIONS_REQUEST_ENABLE_GPS;
 
 public class Menu extends AppCompatActivity {
 

@@ -1,9 +1,4 @@
-package com.tese.parkaid;
-
-import android.view.View;
-import android.widget.TextView;
-
-import java.util.ArrayList;
+package com.tese.chargingtime;
 
 public class Constants {
 

@@ -1,4 +1,4 @@
-package com.tese.parkaid;
+package com.tese.chargingtime;
 
 import android.Manifest;
 import android.app.Notification;
@@ -23,8 +23,8 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 
-import static com.tese.parkaid.Constants.FASTEST_INTERVAL;
-import static com.tese.parkaid.Constants.UPDATE_INTERVAL;
+import static com.tese.chargingtime.Constants.FASTEST_INTERVAL;
+import static com.tese.chargingtime.Constants.UPDATE_INTERVAL;
 
 
 public class LocationService extends Service {

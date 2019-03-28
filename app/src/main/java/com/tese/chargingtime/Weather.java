@@ -1,6 +1,4 @@
-package com.tese.parkaid;
-
-import java.util.Date;
+package com.tese.chargingtime;
 
 public class Weather {
 

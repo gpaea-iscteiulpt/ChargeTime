@@ -1,26 +1,14 @@
-package com.tese.parkaid;
+package com.tese.chargingtime;
 
 import android.location.Location;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
 import android.view.View;
 import android.widget.PopupWindow;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.maps.DirectionsApiRequest;
 import com.google.maps.GeoApiContext;
-import com.google.maps.PendingResult;
-import com.google.maps.internal.PolylineEncoding;
-import com.google.maps.model.DirectionsResult;
-import com.google.maps.model.DirectionsRoute;
-import com.google.maps.model.LatLng;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class CustomOnClickListener implements View.OnClickListener {
 

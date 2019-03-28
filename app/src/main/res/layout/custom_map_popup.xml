@@ -202,7 +202,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="0.5"
                 android:layout_marginRight="14dp"
-                android:textSize="14dp"
+                android:textSize="12dp"
                 android:background="@null"
                 android:textColor="@color/maincolor"
                 android:gravity="center"/>

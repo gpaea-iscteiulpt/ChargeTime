@@ -1,6 +1,4 @@
-package com.tese.parkaid;
-
-import com.google.android.gms.maps.model.LatLng;
+package com.tese.chargingtime;
 
 import java.io.Serializable;
 

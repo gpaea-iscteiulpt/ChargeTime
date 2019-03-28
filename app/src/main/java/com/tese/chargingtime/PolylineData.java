@@ -1,4 +1,4 @@
-package com.tese.parkaid;
+package com.tese.chargingtime;
 
 import com.google.android.gms.maps.model.Polyline;
 import com.google.maps.model.DirectionsLeg;

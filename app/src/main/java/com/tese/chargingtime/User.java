@@ -1,4 +1,4 @@
-package com.tese.parkaid;
+package com.tese.chargingtime;
 
 public class User {
 

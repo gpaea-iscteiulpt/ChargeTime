@@ -1,4 +1,4 @@
-package com.tese.parkaid;
+package com.tese.chargingtime;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
