@@ -18,9 +18,9 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/parking"
+        android:icon="@drawable/charger"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/parking"
+        android:roundIcon="@drawable/charger"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 

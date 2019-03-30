@@ -15,4 +15,7 @@
     <color name="buttonGrey">#e1e1e2</color>
     <color name="circleInsideBlue">#80e5e6ee</color>
     <color name="circleStrokeBlue">#5e98c3</color>
+    <color name="oneYellow">#f9b314</color>
+    <color name="twoYellow">#faab5a</color>
+    <color name="maincolorlighter">#929292</color>
 </resources>

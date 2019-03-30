@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Park Aid</string>
+    <string name="app_name">Charge Time</string>
     <string name="title_activity_maps">Map</string>
     <string name="string_google_maps">Google Maps</string>
     <string name="google_maps_key">AIzaSyCAPibQAzKl4y8XMVvIBEMfGgT1wR_s-Ng</string>
