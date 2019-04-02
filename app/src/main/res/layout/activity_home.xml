@@ -80,7 +80,7 @@
         </RelativeLayout>
 
         <TextView
-            android:id="@+id/txtParkSearchRadius"
+            android:id="@+id/txtMaximumBatteryDistance"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginTop="10dp"
@@ -88,7 +88,7 @@
             android:layout_marginLeft="10dp"
             android:textStyle="bold"
             android:gravity="center"
-            android:text="Park Search Radius (Meters):"
+            android:text="Maximum Battery Distance"
             android:textSize="16dp"
             android:textColor="@color/maincolor"/>
 
@@ -104,7 +104,7 @@
             android:id="@+id/radiusLayout">
 
             <EditText
-                android:id="@+id/searchRadius"
+                android:id="@+id/maximumDistance"
                 android:textColor="@color/maincolor"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"

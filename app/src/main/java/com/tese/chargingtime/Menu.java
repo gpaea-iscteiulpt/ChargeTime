@@ -56,7 +56,7 @@ public class Menu extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
 
-    private ArrayList<Park> mParks = new ArrayList<>();
+    private ArrayList<Station> mStations = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,25 +66,18 @@ public class Menu extends AppCompatActivity {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         storageRef = FirebaseStorage.getInstance().getReference();
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        fillParks();
+        fillStations();
         getLocation();
         fillUserPoints();
     }
 
-    private void fillParks() {
-        mDatabase.child("parks").addValueEventListener(new ValueEventListener() {
+    private void fillStations() {
+        mDatabase.child("stations").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                    Park mPark = postSnapshot.getValue(Park.class);
-                    if(mPark.getName().equals("Red Park")){
-                        mPark.setIconPicture(R.drawable.parkinghalf);
-                    } else if(mPark.getName().equals("Blue Park")) {
-                        mPark.setIconPicture(R.drawable.parkingfull);
-                    } else {
-                        mPark.setIconPicture(R.drawable.parkingfree);
-                    }
-                    mParks.add(mPark);
+                    Station mStation = postSnapshot.getValue(Station.class);
+                    mStations.add(mStation);
                 }
             }
 
@@ -105,14 +98,14 @@ public class Menu extends AppCompatActivity {
         Intent intent = new Intent(this, Maps.class);
         intent.putExtra("LastLocation", mLastLocation);
         intent.putExtra("WhereFrom", "FromMap");
-        intent.putExtra("Parks", mParks);
+        intent.putExtra("Stations", mStations);
         startActivity(intent);
     }
 
     public void checkNavigate(View view){
         Intent intent = new Intent(this, Home.class);
         intent.putExtra("LastLocation", mLastLocation);
-        intent.putExtra("Parks", mParks);
+        intent.putExtra("Stations", mStations);
         startActivity(intent);
     }
 

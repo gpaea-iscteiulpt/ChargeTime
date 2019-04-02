@@ -80,12 +80,12 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
     private Marker mMarkerSelected = null;
     private ArrayList<Marker> mTripMarkers = new ArrayList<>();
     private ArrayList<Marker> mMarkersArray = new ArrayList<>();
-    private ArrayList<Park> mParks = new ArrayList<>();
+    private ArrayList<Station> mStations = new ArrayList<>();
 
     private String mWhereFrom;
     private Place mDestinationPlace;
     private Location mLocation;
-    private Park mClosestPark;
+    private Station mClosestStation;
     private float mClosestDistance;
 
     private Weather mCurrentWeather;
@@ -105,7 +105,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mCurrentDateAndTime = Calendar.getInstance().getTime();
-        mParks = (ArrayList<Park>) getIntent().getExtras().getSerializable("Parks");
+        mStations = (ArrayList<Station>) getIntent().getExtras().getSerializable("Stations");
 
         Button btReset = (Button) findViewById(R.id.btReset);
         btReset.setOnClickListener(new View.OnClickListener() {
@@ -158,10 +158,10 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
                 .strokeColor(getColor(R.color.circleStrokeBlue))
                 .fillColor(getColor(R.color.circleInsideBlue)));
 
-        float lessDistance = checkParkInsideRadius(circle);
+        float lessDistance = checkStationInsideRadius(circle);
         if(lessDistance > 0) {
             for (Marker marker : mMarkersArray) {
-                if (marker.getTag().equals(mClosestPark)) {
+                if (marker.getTag().equals(mClosestStation)) {
                     mMarkerSelected = marker;
                     calculateDirections(marker);
                     break;
@@ -169,12 +169,12 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
             }
         } else {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage("Closest parking lot is at " + Math.round(mClosestDistance) + " meters from the destination. Want to navigate to there?")
-                    .setTitle("No parking lot found in the search radius.");
+            builder.setMessage("Closest station lot is at " + Math.round(mClosestDistance) + " meters from the destination. Want to navigate to there?")
+                    .setTitle("No station found in the search radius.");
             builder.setPositiveButton("Navigate", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
                     for (Marker marker : mMarkersArray) {
-                        if (marker.getTag().equals(mClosestPark)) {
+                        if (marker.getTag().equals(mClosestStation)) {
                             mMarkerSelected = marker;
                             calculateDirections(marker);
                             break;
@@ -195,13 +195,13 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         setCameraView(temp);
     }
 
-    private float checkParkInsideRadius(Circle circle){
+    private float checkStationInsideRadius(Circle circle){
         float[] distance = new float[2];
         float lessDistance = 0;
         mClosestDistance = 0;
 
-        for(Park park : mParks) {
-            Location.distanceBetween(park.getLatitude(), park.getLongitude(),
+        for(Station station: mStations) {
+            Location.distanceBetween(station.getLatitude(), station.getLongitude(),
                     circle.getCenter().latitude, circle.getCenter().longitude, distance);
 
             if (distance[0] < circle.getRadius() && (lessDistance > distance[0] || lessDistance == 0)) {
@@ -210,7 +210,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
 
             if (distance[0] < mClosestDistance || mClosestDistance == 0) {
                 mClosestDistance = distance[0];
-                mClosestPark = park;
+                mClosestStation = station;
             }
         }
 
@@ -234,11 +234,11 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
     }
 
     private void addMapMarkers(){
-        for (Park park : mParks) {
-            Bitmap b = BitmapFactory.decodeResource(getResources(), park.getIconPicture());
+        for (Station station : mStations) {
+            Bitmap b = BitmapFactory.decodeResource(getResources(), station.getIcon());
             Bitmap icon = Bitmap.createScaledBitmap(b, b.getWidth()/5,b.getHeight()/5, false);
-            Marker marker = mMap.addMarker(new MarkerOptions().position(new LatLng(park.getLatitude(), park.getLongitude())).title(park.getName()).icon(BitmapDescriptorFactory.fromBitmap(icon)));
-            marker.setTag(park);
+            Marker marker = mMap.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())).title(station.getName()).icon(BitmapDescriptorFactory.fromBitmap(icon)));
+            marker.setTag(station);
             mMarkersArray.add(marker);
         }
         mMap.setOnInfoWindowClickListener(this);
@@ -303,26 +303,23 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
         final View popupView = inflater.inflate(R.layout.custom_map_popup, null);
 
-        if(marker.getTag().equals("Destination")) {
-
-        }else {
-
-            Park mPark = (Park) marker.getTag();
+        if(!marker.getTag().equals("Destination")) {
+            Station mStation = (Station) marker.getTag();
 
             TextView name = (TextView) popupView.findViewById(R.id.name);
-            name.setText(mPark.getName());
-            TextView description = (TextView) popupView.findViewById(R.id.description);
-            description.setText(mPark.getDescription());
-            TextView address = (TextView) popupView.findViewById(R.id.address);
-            address.setText(mPark.getAddress());
+            name.setText(mStation.getName());
             TextView occupancy = (TextView) popupView.findViewById(R.id.occupancy);
-            occupancy.setText(mPark.getOccupancyPercentage() + "%");
-            TextView hours = (TextView) popupView.findViewById(R.id.hours);
-            hours.setText(mPark.getWorkHours());
-            TextView period = (TextView) popupView.findViewById(R.id.period);
-            period.setText(mPark.getWorkPeriod());
+            occupancy.setText(mStation.getOccupancy() + "%");
+            TextView period = (TextView) popupView.findViewById(R.id.hours);
+            period.setText(mStation.getHours());
             TextView price = (TextView) popupView.findViewById(R.id.price);
-            price.setText(mPark.getPricePerHour() + "€ p/h");
+            price.setText(mStation.getCost() + "€ p/h");
+            TextView chargingStations = (TextView) popupView.findViewById(R.id.charging_stations);
+            chargingStations.setText(mStation.getNumberOfChargingPoints() + "€ p/h");
+            TextView connectors = (TextView) popupView.findViewById(R.id.connectors);
+            price.setText(mStation.getConnectors() + "€ p/h");
+            TextView type = (TextView) popupView.findViewById(R.id.type);
+            price.setText(mStation.getType() + " charge");
 
             Button go = (Button) popupView.findViewById(R.id.go);
             String tempString = "Navigate";
@@ -371,7 +368,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         );
         DirectionsApiRequest directions = new DirectionsApiRequest(mGeoApiContext);
 
-        directions.alternatives(true);
+        //directions.alternatives(true);
         directions.origin(
                 new com.google.maps.model.LatLng(
                         mLocation.getLatitude(),
@@ -403,7 +400,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
                     mPolylinesData.clear();
                 }
 
-                double duration = 99999999;
+                double duration = 999999999;
                 for(DirectionsRoute route: result.routes){
                     List<com.google.maps.model.LatLng> decodedPath = PolylineEncoding.decode(route.overviewPolyline.getEncodedPath());
 

@@ -11,7 +11,7 @@
         android:layout_alignParentTop="true"
         android:layout_gravity="center_horizontal"
         android:contentDescription="@null"
-        android:src="@drawable/parkingfull" />
+        android:src="@drawable/charger" />
 
 
 </RelativeLayout>

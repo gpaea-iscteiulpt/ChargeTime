@@ -5,13 +5,13 @@
     android:layout_height="wrap_content">
 
     <ImageView
-        android:id="@+id/parking"
+        android:id="@+id/station"
         android:layout_width="42dp"
         android:layout_height="46dp"
         android:layout_alignParentTop="true"
         android:layout_gravity="center_horizontal"
         android:contentDescription="@null"
-        android:src="@drawable/charger" />
+        android:src="@drawable/electric_station" />
 
 
 </RelativeLayout>

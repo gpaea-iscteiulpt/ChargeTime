@@ -69,14 +69,14 @@
                 android:layout_weight="0.5">
 
                 <TextView
-                    android:id="@+id/description"
+                    android:id="@+id/charging_stations"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="@color/maincolor"
                     android:textSize="14dp"
                     android:paddingTop="8dp"
                     android:layout_marginLeft="10dp"
-                    android:text="Description"/>
+                    android:text="Charging stations"/>
 
             </LinearLayout>
 
@@ -86,14 +86,14 @@
                 android:layout_weight="0.5">
 
                 <TextView
-                    android:id="@+id/address"
+                    android:id="@+id/connectors"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="@color/maincolor"
                     android:textSize="14dp"
                     android:paddingTop="8dp"
                     android:layout_marginLeft="10dp"
-                    android:text="Address"/>
+                    android:text="Connectors"/>
 
             </LinearLayout>
 
@@ -187,8 +187,8 @@
             android:gravity="center">
 0
             <TextView
-                android:id="@+id/period"
-                android:text="Periods"
+                android:id="@+id/type"
+                android:text="Charging type"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.5"
