@@ -88,6 +88,8 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
     private Station mClosestStation;
     private float mClosestDistance;
 
+    private double mBatteryGains;
+
     private Weather mCurrentWeather;
     private Date mCurrentDateAndTime;
 
@@ -311,15 +313,15 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
             TextView occupancy = (TextView) popupView.findViewById(R.id.occupancy);
             occupancy.setText(mStation.getOccupancy() + "%");
             TextView period = (TextView) popupView.findViewById(R.id.hours);
-            period.setText(mStation.getHours());
+            period.setText("Open " + Integer.toString(mStation.getHours()) + "h");
             TextView price = (TextView) popupView.findViewById(R.id.price);
             price.setText(mStation.getCost() + "€ p/h");
             TextView chargingStations = (TextView) popupView.findViewById(R.id.charging_stations);
-            chargingStations.setText(mStation.getNumberOfChargingPoints() + "€ p/h");
+            chargingStations.setText("Nº Charging Stations: " +  mStation.getNumberOfChargingPoints());
             TextView connectors = (TextView) popupView.findViewById(R.id.connectors);
-            price.setText(mStation.getConnectors() + "€ p/h");
+            connectors.setText("Nº Connectors: " + mStation.getConnectors());
             TextView type = (TextView) popupView.findViewById(R.id.type);
-            price.setText(mStation.getType() + " charge");
+            type.setText(mStation.getType() + " Charging");
 
             Button go = (Button) popupView.findViewById(R.id.go);
             String tempString = "Navigate";
@@ -352,6 +354,9 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
                     return true;
                 }
             });
+
+            TextView batteryLevel = (TextView) popupView.findViewById(R.id.batteryLevel);
+            batteryLevel.setText(Double.toString(mBatteryGains));
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 popupWindow.setElevation(20);
@@ -400,6 +405,9 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
                     mPolylinesData.clear();
                 }
 
+                String locations = "";
+                String url = "https://maps.googleapis.com/maps/api/elevation/json?locations=";
+
                 double duration = 999999999;
                 for(DirectionsRoute route: result.routes){
                     List<com.google.maps.model.LatLng> decodedPath = PolylineEncoding.decode(route.overviewPolyline.getEncodedPath());
@@ -407,7 +415,20 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
                     List<com.google.android.gms.maps.model.LatLng> newDecodedPath = new ArrayList<>();
 
                     for(com.google.maps.model.LatLng latLng: decodedPath){
+                        locations = locations + "|" + latLng.lat + "," + latLng.lng;
                         newDecodedPath.add(new com.google.android.gms.maps.model.LatLng(latLng.lat, latLng.lng));
+                    }
+
+                    url += locations + "&key=" + getString(R.string.google_api_key);
+                    StringBuffer response = new StringBuffer();
+
+                    int ret = GetHttp.GetHttpToServer(url, response);
+                    if (ret == 0) {
+                        try {
+                            getBatteryGain(new JSONObject(response.toString()).getJSONArray("results"));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
 
                     Polyline polyline = mMap.addPolyline(new PolylineOptions().addAll(newDecodedPath));
@@ -419,14 +440,35 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
                     mMarkerSelected.setVisible(false);
 
                     double tempDuration = route.legs[0].duration.inSeconds;
+                    double distance = route.legs[0].distance.inMeters;
                     if(tempDuration < duration){
                         duration = tempDuration;
                         onPolylineClick(polyline);
                         zoomRoute(polyline.getPoints());
                     }
+
+
                 }
             }
         });
+    }
+
+    public void getBatteryGain(JSONArray results){
+        ArrayList<Double> elevationLevels = new ArrayList<>();
+        for(int i = 0; i<results.length(); i++){
+            try {
+                elevationLevels.add(Double.parseDouble(results.getJSONObject(i).getString("elevation")));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        for(int i = 0; i < elevationLevels.size() - 1; i++){
+            double difference = elevationLevels.get(i) - elevationLevels.get(i+1);
+            if(difference > 0){
+                mBatteryGains += (difference*0.05);
+            }
+        }
     }
 
     private void resetMap(){

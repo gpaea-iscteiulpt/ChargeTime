@@ -61,39 +61,39 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:weightSum="1"
-            android:layout_weight="0.6">
+            android:layout_weight="0.5">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.5">
+                android:layout_height="match_parent"
+                android:layout_weight="0.2">
 
                 <TextView
-                    android:id="@+id/charging_stations"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/maincolor"
-                    android:textSize="14dp"
-                    android:paddingTop="8dp"
+                    android:id="@+id/batteryLevel"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
                     android:layout_marginLeft="10dp"
-                    android:text="Charging stations"/>
+                    android:layout_marginRight="10dp"
+                    android:gravity="center"
+                    android:text="Battery Level"
+                    android:textColor="@color/maincolor"
+                    android:textSize="20dp" />
 
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.5">
+                android:layout_weight="0.8">
 
                 <TextView
-                    android:id="@+id/connectors"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:id="@+id/estimated"
+                    android:layout_width="match_parent"
+                    android:layout_height="10dp"
                     android:textColor="@color/maincolor"
-                    android:textSize="14dp"
-                    android:paddingTop="8dp"
-                    android:layout_marginLeft="10dp"
-                    android:text="Connectors"/>
+                    android:textSize="8dp"
+                    android:gravity="center"
+                    android:text="Estimated Battery Level at Destination"/>
 
             </LinearLayout>
 
@@ -104,7 +104,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:weightSum="1"
-            android:layout_weight="0.4">
+            android:layout_weight="0.5">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -147,6 +147,38 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="15dp">
+
+        <TextView
+            android:id="@+id/charging_stations"
+            android:gravity="center"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="@color/maincolor"
+            android:textSize="14dp"
+            android:layout_weight="0.5"
+            android:paddingTop="8dp"
+            android:layout_marginLeft="10dp"
+            android:text="Charging stations"/>
+
+        <TextView
+            android:id="@+id/connectors"
+            android:gravity="center"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="@color/maincolor"
+            android:layout_weight="0.5"
+            android:textSize="14dp"
+            android:paddingTop="8dp"
+            android:layout_marginLeft="10dp"
+            android:text="Connectors"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_marginTop="15dp">
 
@@ -160,12 +192,12 @@
             <TextView
                 android:id="@+id/hours"
                 android:text="Working Hours"
-                android:layout_width="0dp"
                 android:textSize="14dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.5"
                 android:textColor="@color/maincolor"
-                android:gravity="center"/>
+                android:gravity="center"
+                android:layout_width="0dp"/>
 
             <TextView
                 android:id="@+id/price"

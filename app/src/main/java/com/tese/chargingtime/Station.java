@@ -1,8 +1,5 @@
 package com.tese.chargingtime;
 
-import android.graphics.Bitmap;
-import android.support.v4.content.ContextCompat;
-
 import java.io.Serializable;
 
 public class Station implements Serializable {
@@ -18,6 +15,15 @@ public class Station implements Serializable {
     private double altitude;
     private int icon;
     private double occupancy;
+    private double batteryLevel;
+
+    public double getBatteryLevel() {
+        return batteryLevel;
+    }
+
+    public void setBatteryLevel(double batteryLevel) {
+        this.batteryLevel = batteryLevel;
+    }
 
     public double getOccupancy() {
         return occupancy;
