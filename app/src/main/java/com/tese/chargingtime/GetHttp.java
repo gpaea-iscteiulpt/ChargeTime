@@ -1,5 +1,6 @@
 package com.tese.chargingtime;
 
+import android.os.AsyncTask;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -13,11 +14,12 @@ import java.net.URL;
 
 import javax.net.ssl.SSLException;
 
-public class GetHttp {
+public class GetHttp extends AsyncTask<HttpInformation, Void, Void> {
 
-    public static int GetHttpToServer(String urlLink, StringBuffer response) {
+    @Override
+    protected Void doInBackground(HttpInformation... params) {
         try {
-            URL obj = new URL(urlLink);
+            URL obj = new URL( params[0].url);
             HttpURLConnection conn = (HttpURLConnection) obj.openConnection();
             conn.setRequestMethod("GET");
             int responseCode = conn.getResponseCode();
@@ -27,29 +29,33 @@ public class GetHttp {
             String inputLine;
 
             while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
+                params[0].response.append(inputLine);
             }
             in.close();
         } catch (MalformedURLException ex) {
             Log.e("GetHttp", Log.getStackTraceString(ex));
-            return 2;
+            params[0].value = 2;
         } catch (NoRouteToHostException ex) {
             Log.e("GetHttp", Log.getStackTraceString(ex));
-            return 3;
+            params[0].value = 3;
         } catch (SocketTimeoutException ex){
             Log.e("GetHttp", Log.getStackTraceString(ex));
-            return 4;
+            params[0].value = 4;
         } catch (SSLException ex){
             Log.e("GetHttp", Log.getStackTraceString(ex));
-            return 5;
+            params[0].value = 5;
         } catch (IOException ex) {
             Log.e("GetHttp", Log.getStackTraceString(ex));
-            return 6;
+            params[0].value = 6;
         } catch (Exception e){
             Log.e("GetHttp", Log.getStackTraceString(e));
-            return 7;
+            params[0].value = 7;
         }
-        return 0;
+        params[0].value = 0;
+        return null;
     }
-
 }
+
+
+
+

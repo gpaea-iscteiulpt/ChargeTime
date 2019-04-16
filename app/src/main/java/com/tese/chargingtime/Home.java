@@ -76,9 +76,9 @@ public class Home extends AppCompatActivity implements GoogleApiClient.OnConnect
         intent.putExtra("WhereFrom", "FromSearch");
         intent.putExtra("DestinationPlace", mDestinationPlace);
         intent.putExtra("Stations", mStations);
-        EditText radius = (EditText) findViewById(R.id.maximumDistance);
-        Constants.setMaximumDistance(Integer.parseInt(radius.getText().toString()));
-        intent.putExtra("Radius", Constants.MAXIMUM_DISTANCE);
+        EditText btLevel = (EditText) findViewById(R.id.btLvl);
+        Constants.setCurrentBatteryLevel(Integer.parseInt(btLevel.getText().toString()));
+        intent.putExtra("Current Battery Level", Constants.CURRENT_BATTERY_LEVEL);
         startActivity(intent);
     }
 

@@ -8,10 +8,15 @@ public class Constants {
     public static final long UPDATE_INTERVAL = 4000;
     public static final long FASTEST_INTERVAL = 2000;
 
-    public static int MAXIMUM_DISTANCE = 1000;
+    public static int CURRENT_BATTERY_LEVEL = 100;
+    public static int MAXIMUM_DISTANCE = 300;
 
     public static void setMaximumDistance(int value){
         MAXIMUM_DISTANCE = value;
+    }
+
+    public static void setCurrentBatteryLevel(int value){
+        CURRENT_BATTERY_LEVEL = value;
     }
 
     public static String USERNAME = "";
@@ -28,6 +33,14 @@ public class Constants {
     public static String getUsername(){ return USERNAME; }
 
     public static int getUserPoints(){ return USER_POINTS; }
+
+    public static int getCurrentBatteryLevel() {
+        return CURRENT_BATTERY_LEVEL;
+    }
+
+    public static int getMaximumDistance() {
+        return MAXIMUM_DISTANCE;
+    }
 
 
 }

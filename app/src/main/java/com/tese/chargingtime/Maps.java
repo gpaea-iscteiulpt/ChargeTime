@@ -61,10 +61,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 public class Maps extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, GoogleMap.OnPolylineClickListener, GoogleMap.OnInfoWindowClickListener{
@@ -88,7 +92,13 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
     private Station mClosestStation;
     private float mClosestDistance;
 
-    private double mBatteryGains;
+    private double mBatteryLevelAtDestination;
+    private double mMaximumReach;
+    private int mCurrentBatteryLevel;
+    public Station mCurrentStation;
+    public HashMap<String, SnippetInformation> mPolylineInformation = new HashMap<String, SnippetInformation>();
+    private double consumptionPerMeters = 0.25;
+
 
     private Weather mCurrentWeather;
     private Date mCurrentDateAndTime;
@@ -102,12 +112,15 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        URL weatherUrl = WeatherApi.buildUrlWeather();
-        new JsonTask().execute(weatherUrl);
+//        URL weatherUrl = WeatherApi.buildUrlWeather();
+//        new JsonTask().execute(weatherUrl);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mCurrentDateAndTime = Calendar.getInstance().getTime();
         mStations = (ArrayList<Station>) getIntent().getExtras().getSerializable("Stations");
+        mCurrentBatteryLevel = getIntent().getIntExtra("Current Battery Level", 100);
+
+        getMaximumReach();
 
         Button btReset = (Button) findViewById(R.id.btReset);
         btReset.setOnClickListener(new View.OnClickListener() {
@@ -127,7 +140,12 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        mLocation = (Location) getIntent().getParcelableExtra("LastLocation");
+        //mLocation = (Location) getIntent().getParcelableExtra("LastLocation");
+        Location newLocation = new Location("Dundee");
+        newLocation.setLatitude(56.462033);
+        newLocation.setLongitude(-2.970840);
+        mLocation = newLocation;
+
         mWhereFrom = (String) getIntent().getStringExtra("WhereFrom");
 
         startLocationService();
@@ -145,8 +163,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         mMap.setOnPolylineClickListener(this);
     }
 
-    private void prepareNavigate(){
-        int mSearchRadius = (int) getIntent().getIntExtra("Radius", 50);
+    private void prepareNavigate() {
         mDestinationPlace = (Place) getIntent().getParcelableExtra("DestinationPlace");
         Marker newMarker = mMap.addMarker(new MarkerOptions().position(mDestinationPlace.getLatLng()).title(mDestinationPlace.getId()));
         newMarker.setTag("Destination");
@@ -154,69 +171,46 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         temp.setLatitude(mDestinationPlace.getLatLng().latitude);
         temp.setLongitude(mDestinationPlace.getLatLng().longitude);
 
-        Circle circle = mMap.addCircle(new CircleOptions()
-                .center(newMarker.getPosition())
-                .radius(mSearchRadius)
-                .strokeColor(getColor(R.color.circleStrokeBlue))
-                .fillColor(getColor(R.color.circleInsideBlue)));
+        checkClosestStation();
 
-        float lessDistance = checkStationInsideRadius(circle);
-        if(lessDistance > 0) {
-            for (Marker marker : mMarkersArray) {
-                if (marker.getTag().equals(mClosestStation)) {
-                    mMarkerSelected = marker;
-                    calculateDirections(marker);
-                    break;
-                }
-            }
-        } else {
+        mMarkerSelected = mMarkersArray.get(0);
+        Location destination = new Location("Marker Selected");
+        destination.setLatitude(mMarkerSelected.getPosition().latitude);
+        destination.setLongitude(mMarkerSelected.getPosition().longitude);
+        mClosestDistance = Math.round(mLocation.distanceTo(destination));
+
+        if (mMaximumReach >= mClosestDistance){
+            calculateDirections(mMarkersArray.get(0));
+        }else{
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage("Closest station lot is at " + Math.round(mClosestDistance) + " meters from the destination. Want to navigate to there?")
-                    .setTitle("No station found in the search radius.");
-            builder.setPositiveButton("Navigate", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    for (Marker marker : mMarkersArray) {
-                        if (marker.getTag().equals(mClosestStation)) {
-                            mMarkerSelected = marker;
-                            calculateDirections(marker);
-                            break;
-                        }
-                    }
-                }
-            });
+            builder.setMessage("With your current battery level you can't reach the closest charging station on the system. " +
+                    "Closest charging station is at " + Math.round(mClosestDistance) + " meters from your location.")
+                    .setTitle("No charging station found for the current battery level.");
             builder.setCancelable(false);
-            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    dialog.cancel();
-                    finish();
-                }
-            });
             AlertDialog alertDialog = builder.create();
             alertDialog.show();
         }
         setCameraView(temp);
     }
 
-    private float checkStationInsideRadius(Circle circle){
-        float[] distance = new float[2];
-        float lessDistance = 0;
-        mClosestDistance = 0;
+    private void checkClosestStation(){
+        Collections.sort(mMarkersArray, new Comparator<Marker>() {
 
-        for(Station station: mStations) {
-            Location.distanceBetween(station.getLatitude(), station.getLongitude(),
-                    circle.getCenter().latitude, circle.getCenter().longitude, distance);
-
-            if (distance[0] < circle.getRadius() && (lessDistance > distance[0] || lessDistance == 0)) {
-                lessDistance = distance[0];
+            @Override
+            public int compare(Marker a, Marker b) {
+                Location locationA = new Location("point A");
+                locationA.setLatitude(a.getPosition().latitude);
+                locationA.setLongitude(a.getPosition().longitude);
+                Location locationB = new Location("point B");
+                locationB.setLatitude(b.getPosition().latitude);
+                locationB.setLongitude(b.getPosition().longitude);
+                float distanceOne = mLocation.distanceTo(locationA);
+                float distanceTwo = mLocation.distanceTo(locationB);
+                return Float.compare(distanceOne, distanceTwo);
             }
+        });
 
-            if (distance[0] < mClosestDistance || mClosestDistance == 0) {
-                mClosestDistance = distance[0];
-                mClosestStation = station;
-            }
-        }
 
-        return lessDistance;
     }
 
     private void setCameraView(Location loc) {
@@ -238,7 +232,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
     private void addMapMarkers(){
         for (Station station : mStations) {
             Bitmap b = BitmapFactory.decodeResource(getResources(), station.getIcon());
-            Bitmap icon = Bitmap.createScaledBitmap(b, b.getWidth()/5,b.getHeight()/5, false);
+            Bitmap icon = Bitmap.createScaledBitmap(b, b.getWidth()/2,b.getHeight()/2, false);
             Marker marker = mMap.addMarker(new MarkerOptions().position(new LatLng(station.getLatitude(), station.getLongitude())).title(station.getName()).icon(BitmapDescriptorFactory.fromBitmap(icon)));
             marker.setTag(station);
             mMarkersArray.add(marker);
@@ -308,6 +302,10 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         if(!marker.getTag().equals("Destination")) {
             Station mStation = (Station) marker.getTag();
 
+            mCurrentStation = mStation;
+
+            mStation.setOccupancy(1);
+
             TextView name = (TextView) popupView.findViewById(R.id.name);
             name.setText(mStation.getName());
             TextView occupancy = (TextView) popupView.findViewById(R.id.occupancy);
@@ -317,11 +315,11 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
             TextView price = (TextView) popupView.findViewById(R.id.price);
             price.setText(mStation.getCost() + "€ p/h");
             TextView chargingStations = (TextView) popupView.findViewById(R.id.charging_stations);
-            chargingStations.setText("Nº Charging Stations: " +  mStation.getNumberOfChargingPoints());
+            chargingStations.setText("Charging Stations: " +  mStation.getNumberOfChargingPoints());
             TextView connectors = (TextView) popupView.findViewById(R.id.connectors);
-            connectors.setText("Nº Connectors: " + mStation.getConnectors());
+            connectors.setText("Connectors: " + mStation.getConnectors());
             TextView type = (TextView) popupView.findViewById(R.id.type);
-            type.setText(mStation.getType() + " Charging");
+            type.setText(mStation.getType());
 
             Button go = (Button) popupView.findViewById(R.id.go);
             String tempString = "Navigate";
@@ -355,9 +353,6 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
                 }
             });
 
-            TextView batteryLevel = (TextView) popupView.findViewById(R.id.batteryLevel);
-            batteryLevel.setText(Double.toString(mBatteryGains));
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 popupWindow.setElevation(20);
             }
@@ -366,6 +361,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         return false;
     }
 
+
     public void calculateDirections(Marker marker){
         com.google.maps.model.LatLng destination = new com.google.maps.model.LatLng(
                 marker.getPosition().latitude,
@@ -373,7 +369,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         );
         DirectionsApiRequest directions = new DirectionsApiRequest(mGeoApiContext);
 
-        //directions.alternatives(true);
+        directions.alternatives(true);
         directions.origin(
                 new com.google.maps.model.LatLng(
                         mLocation.getLatitude(),
@@ -410,65 +406,87 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
 
                 double duration = 999999999;
                 for(DirectionsRoute route: result.routes){
-                    List<com.google.maps.model.LatLng> decodedPath = PolylineEncoding.decode(route.overviewPolyline.getEncodedPath());
 
-                    List<com.google.android.gms.maps.model.LatLng> newDecodedPath = new ArrayList<>();
+                    ArrayList<com.google.maps.model.LatLng> routeLocations = new ArrayList<>();
 
-                    for(com.google.maps.model.LatLng latLng: decodedPath){
-                        locations = locations + "|" + latLng.lat + "," + latLng.lng;
-                        newDecodedPath.add(new com.google.android.gms.maps.model.LatLng(latLng.lat, latLng.lng));
-                    }
+                    if(route.legs[0].distance.inMeters <= (mMaximumReach * 100)) {
 
-                    url += locations + "&key=" + getString(R.string.google_api_key);
-                    StringBuffer response = new StringBuffer();
+                        List<com.google.maps.model.LatLng> decodedPath = PolylineEncoding.decode(route.overviewPolyline.getEncodedPath());
 
-                    int ret = GetHttp.GetHttpToServer(url, response);
-                    if (ret == 0) {
-                        try {
-                            getBatteryGain(new JSONObject(response.toString()).getJSONArray("results"));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                        List<com.google.android.gms.maps.model.LatLng> newDecodedPath = new ArrayList<>();
+
+                        for (com.google.maps.model.LatLng latLng : decodedPath) {
+                            routeLocations.add(latLng);
+                            if(locations.length() != 0) locations += "|";
+                            locations = locations + latLng.lat + "," + latLng.lng;
+                            newDecodedPath.add(new com.google.android.gms.maps.model.LatLng(latLng.lat, latLng.lng));
+                        }
+
+                        url += locations + "&key=" + getString(R.string.google_api_key);
+                        StringBuffer response = new StringBuffer();
+                        HttpInformation httpInfo = new HttpInformation(url, response);
+                        new GetHttp().execute(httpInfo);
+                        int ret = httpInfo.value;
+                        int batteryLevel = 0;
+                        if (ret == 0) {
+                            try {
+                                batteryLevel = getBatteryLevelAtDestination(new JSONObject(response.toString()).getJSONArray("results"), routeLocations);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        Polyline polyline = mMap.addPolyline(new PolylineOptions().addAll(newDecodedPath));
+                        mPolylineInformation.put(polyline.getId(), new SnippetInformation(batteryLevel, (int) mCurrentStation.getOccupancy()));
+
+                        polyline.setClickable(true);
+                        polyline.setColor(ContextCompat.getColor(Maps.this, R.color.grey));
+                        mPolylinesData.add(new PolylineData(polyline, route.legs[0]));
+
+                        mMarkerSelected.setVisible(false);
+
+                        double tempDuration = route.legs[0].duration.inSeconds;
+
+                        if (tempDuration < duration) {
+                            duration = tempDuration;
+                            onPolylineClick(polyline);
+                            zoomRoute(polyline.getPoints());
                         }
                     }
-
-                    Polyline polyline = mMap.addPolyline(new PolylineOptions().addAll(newDecodedPath));
-
-                    polyline.setClickable(true);
-                    polyline.setColor(ContextCompat.getColor(Maps.this, R.color.grey));
-                    mPolylinesData.add(new PolylineData(polyline, route.legs[0]));
-
-                    mMarkerSelected.setVisible(false);
-
-                    double tempDuration = route.legs[0].duration.inSeconds;
-                    double distance = route.legs[0].distance.inMeters;
-                    if(tempDuration < duration){
-                        duration = tempDuration;
-                        onPolylineClick(polyline);
-                        zoomRoute(polyline.getPoints());
-                    }
-
 
                 }
             }
         });
     }
 
-    public void getBatteryGain(JSONArray results){
-        ArrayList<Double> elevationLevels = new ArrayList<>();
+    public int getBatteryLevelAtDestination(JSONArray results, ArrayList<com.google.maps.model.LatLng> routeLocations){
+        ArrayList<Integer> elevationLevels = new ArrayList<>();
         for(int i = 0; i<results.length(); i++){
             try {
-                elevationLevels.add(Double.parseDouble(results.getJSONObject(i).getString("elevation")));
+                elevationLevels.add(Integer.parseInt(results.getJSONObject(i).getString("elevation")));
             } catch (JSONException e) {
+                Log.d(TAG, "getBatteryLevelAtDestination: " + e.getMessage());
                 e.printStackTrace();
             }
         }
 
+        int batteryLevelAtDestination = mCurrentBatteryLevel;
+
         for(int i = 0; i < elevationLevels.size() - 1; i++){
-            double difference = elevationLevels.get(i) - elevationLevels.get(i+1);
-            if(difference > 0){
-                mBatteryGains += (difference*0.05);
+            int elevation = Math.round(elevationLevels.get(i) - elevationLevels.get(i+1));
+            int distance = getDistanceBetweenTwoPoints(routeLocations.get(i), routeLocations.get(i+1));
+            if(elevation > 0){
+                int slope = (elevation / distance);
+                batteryLevelAtDestination = (int) Math.round(batteryLevelAtDestination + (distance * slope * 0.80));
+            } else {
+                batteryLevelAtDestination = (int) Math.round(batteryLevelAtDestination - (distance * consumptionPerMeters));
             }
         }
+        return batteryLevelAtDestination;
+    }
+
+    private void getMaximumReach(){
+        mMaximumReach = Math.round((mCurrentBatteryLevel * Constants.getMaximumDistance())) * 10;
     }
 
     private void resetMap(){
@@ -493,9 +511,10 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
                 polylineData.getPolyline().setZIndex(1);
 
                 LatLng endLocation = new LatLng(polylineData.getLeg().endLocation.lat, polylineData.getLeg().endLocation.lng);
+                SnippetInformation info = mPolylineInformation.get(polyline.getId());
                 Marker marker = mMap.addMarker(new MarkerOptions().position(endLocation)
-                                        .title("Trip: #" + index)
-                                        .snippet("Duration: " + polylineData.getLeg().duration));
+                                            .title("Duration: " + polylineData.getLeg().duration)
+                                        .snippet("Battery at Destination: " + info.batteryLevel + "% | Occupancy at ETA: " + info.ocuppancy + "%"));
 
                 marker.showInfoWindow();
 
@@ -597,6 +616,28 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
 
     private void showMessage(String str){
         Toast.makeText(getApplicationContext(), str, Toast.LENGTH_SHORT).show();
+    }
+
+    private int getDistanceBetweenTwoPoints(com.google.maps.model.LatLng a, com.google.maps.model.LatLng b){
+        Location locationA = new Location("Point A");
+        locationA.setLatitude(a.lat);
+        locationA.setLongitude(a.lng);
+        Location locationB = new Location("Point B");
+        locationB.setLatitude(b.lat);
+        locationB.setLongitude(b.lng);
+        return Math.round(locationA.distanceTo(locationB));
+    }
+
+    public class SnippetInformation{
+
+        private int batteryLevel;
+        private int ocuppancy;
+
+        public SnippetInformation(int batteryLevel, int ocuppancy){
+            this.batteryLevel = batteryLevel;
+            this.ocuppancy = ocuppancy;
+        }
+
     }
 
 }

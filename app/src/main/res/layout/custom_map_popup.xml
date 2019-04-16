@@ -29,7 +29,7 @@
             android:maxLines="1"
             android:textStyle="bold"
             android:paddingTop="0dp"
-            android:layout_marginLeft="10dp"
+            android:layout_marginLeft="5dp"
             android:top="5dp"
             android:layout_gravity="start"/>
 
@@ -45,6 +45,7 @@
             android:textStyle="bold"
             android:layout_marginRight="10dp"
             android:layout_marginTop="5dp"
+            android:paddingLeft="15dp"
             android:layout_gravity="end"
             android:gravity="center"/>
 
@@ -66,18 +67,19 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="0.2">
+                android:layout_weight="1">
 
                 <TextView
-                    android:id="@+id/batteryLevel"
+                    android:id="@+id/type"
+                    android:text="Chargyng Type"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:layout_marginLeft="10dp"
                     android:layout_marginRight="10dp"
-                    android:gravity="center"
-                    android:text="Battery Level"
+                    android:layout_weight="1"
+                    android:textSize="20dp"
                     android:textColor="@color/maincolor"
-                    android:textSize="20dp" />
+                    android:gravity="center"/>
 
             </LinearLayout>
 
@@ -87,13 +89,13 @@
                 android:layout_weight="0.8">
 
                 <TextView
-                    android:id="@+id/estimated"
+                    android:id="@+id/chargingTxt"
                     android:layout_width="match_parent"
                     android:layout_height="10dp"
                     android:textColor="@color/maincolor"
                     android:textSize="8dp"
                     android:gravity="center"
-                    android:text="Estimated Battery Level at Destination"/>
+                    android:text="Chargyng Type"/>
 
             </LinearLayout>
 
@@ -217,16 +219,6 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center">
-0
-            <TextView
-                android:id="@+id/type"
-                android:text="Charging type"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.5"
-                android:textSize="14dp"
-                android:textColor="@color/maincolor"
-                android:gravity="center"/>
 
             <Button
                 android:id="@+id/go"
@@ -234,6 +226,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="0.5"
                 android:layout_marginRight="14dp"
+                android:layout_gravity="center"
                 android:textSize="12dp"
                 android:background="@null"
                 android:textColor="@color/maincolor"
