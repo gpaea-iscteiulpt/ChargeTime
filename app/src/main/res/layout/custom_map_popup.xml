@@ -66,6 +66,22 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.8">
+
+                <TextView
+                    android:id="@+id/chargingTxt"
+                    android:layout_width="match_parent"
+                    android:layout_height="10dp"
+                    android:textColor="@color/maincolor"
+                    android:textSize="8dp"
+                    android:gravity="center"
+                    android:text="Charging Type:"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1">
 
@@ -83,22 +99,6 @@
 
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.8">
-
-                <TextView
-                    android:id="@+id/chargingTxt"
-                    android:layout_width="match_parent"
-                    android:layout_height="10dp"
-                    android:textColor="@color/maincolor"
-                    android:textSize="8dp"
-                    android:gravity="center"
-                    android:text="Chargyng Type"/>
-
-            </LinearLayout>
-
         </LinearLayout>
 
         <LinearLayout
@@ -107,6 +107,22 @@
             android:orientation="vertical"
             android:weightSum="1"
             android:layout_weight="0.5">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.8">
+
+                <TextView
+                    android:id="@+id/subtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="10dp"
+                    android:textColor="@color/maincolor"
+                    android:textSize="8dp"
+                    android:gravity="center"
+                    android:text="Percentage of occupancy:"/>
+
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -123,22 +139,6 @@
                     android:text="Occupancy"
                     android:textColor="@color/maincolor"
                     android:textSize="20dp" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.8">
-
-                <TextView
-                    android:id="@+id/subtitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="10dp"
-                    android:textColor="@color/maincolor"
-                    android:textSize="8dp"
-                    android:gravity="center"
-                    android:text="occupied"/>
 
             </LinearLayout>
 
@@ -225,10 +225,13 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.5"
-                android:layout_marginRight="14dp"
+                android:layout_marginRight="75dp"
+                android:layout_marginLeft="75dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="5dp"
                 android:layout_gravity="center"
                 android:textSize="12dp"
-                android:background="@null"
+                android:background="@drawable/custom_border"
                 android:textColor="@color/maincolor"
                 android:gravity="center"/>
 

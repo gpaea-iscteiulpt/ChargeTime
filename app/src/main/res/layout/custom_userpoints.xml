@@ -19,7 +19,7 @@
             android:id="@+id/userpoints"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="50 points - user"/>
+            android:text="50 points - John Doe"/>
 
     </RelativeLayout>
 

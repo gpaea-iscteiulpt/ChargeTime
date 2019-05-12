@@ -38,8 +38,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.Circle;
-import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
@@ -61,7 +59,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -85,6 +82,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
     private ArrayList<Marker> mTripMarkers = new ArrayList<>();
     private ArrayList<Marker> mMarkersArray = new ArrayList<>();
     private ArrayList<Station> mStations = new ArrayList<>();
+    public ArrayList<RouteInformation> mRoutesInformation = new ArrayList<RouteInformation>();
 
     private String mWhereFrom;
     private Place mDestinationPlace;
@@ -97,8 +95,6 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
     private int mCurrentBatteryLevel;
     public Station mCurrentStation;
     public HashMap<String, SnippetInformation> mPolylineInformation = new HashMap<String, SnippetInformation>();
-    private double consumptionPerMeters = 0.25;
-
 
     private Weather mCurrentWeather;
     private Date mCurrentDateAndTime;
@@ -171,7 +167,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         temp.setLatitude(mDestinationPlace.getLatLng().latitude);
         temp.setLongitude(mDestinationPlace.getLatLng().longitude);
 
-        checkClosestStation();
+        checkBestStation();
 
         mMarkerSelected = mMarkersArray.get(0);
         Location destination = new Location("Marker Selected");
@@ -193,7 +189,8 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         setCameraView(temp);
     }
 
-    private void checkClosestStation(){
+    private void checkBestStation(){
+
         Collections.sort(mMarkersArray, new Comparator<Marker>() {
 
             @Override
@@ -210,7 +207,45 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
             }
         });
 
+        //Adicionar aqui os modelos de previsão.
+        //Guardar informação das durações em algum lado para comparar.
+        for(Marker marker : mMarkersArray){
+            getRouteDurationAPI(marker);
+        }
+    }
 
+    public double getRouteDurationAPI(Marker marker){
+        String request = "https://maps.googleapis.com/maps/api/elevation/json?origin=" + mLocation.getLatitude() + "," + mLocation.getLongitude() +
+                "&destination=" + marker.getPosition().latitude + "," + marker.getPosition().longitude + "&key=" + getString(R.string.google_api_key);
+        StringBuffer response = new StringBuffer();
+        HttpInformation httpInfo = new HttpInformation(request, response);
+        new GetHttp().execute(httpInfo);
+        int ret = httpInfo.value;
+        double duration = 0;
+        if (ret == 0) {
+            try {
+                JSONArray routes = new JSONObject(response.toString()).getJSONArray("routes");
+                duration = getSmallestDuration(routes);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return duration;
+    }
+
+    private double getSmallestDuration(JSONArray routes){
+        double duration = 0;
+        for(int i = 0; i<routes.length(); i++){
+            try {
+                JSONObject obj = routes.getJSONObject(i);
+                Log.d(TAG, obj.toString());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return duration;
     }
 
     private void setCameraView(Location loc) {
@@ -304,7 +339,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
 
             mCurrentStation = mStation;
 
-            mStation.setOccupancy(1);
+            mStation.setOccupancy(55);
 
             TextView name = (TextView) popupView.findViewById(R.id.name);
             name.setText(mStation.getName());
@@ -363,6 +398,9 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
 
 
     public void calculateDirections(Marker marker){
+
+        final Marker selectedMarker = marker;
+
         com.google.maps.model.LatLng destination = new com.google.maps.model.LatLng(
                 marker.getPosition().latitude,
                 marker.getPosition().longitude
@@ -379,7 +417,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         directions.destination(destination).setCallback(new PendingResult.Callback<DirectionsResult>() {
             @Override
             public void onResult(DirectionsResult result) {
-                addPolylinesToMap(result);
+                addPolylinesToMap(result, selectedMarker);
             }
 
             @Override
@@ -389,25 +427,22 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         });
     }
 
-    private void addPolylinesToMap(final DirectionsResult result){
+    private void addPolylinesToMap(final DirectionsResult result, Marker selected){
+        final int batteryLevel = getElevationInformation(selected);
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
 
-                if(mPolylinesData.size() > 0){
-                    for(PolylineData polylineData: mPolylinesData){
+                if(mPolylinesData.size() > 0) {
+                    for (PolylineData polylineData : mPolylinesData) {
                         polylineData.getPolyline().remove();
                     }
                     mPolylinesData.clear();
                 }
 
-                String locations = "";
-                String url = "https://maps.googleapis.com/maps/api/elevation/json?locations=";
-
                 double duration = 999999999;
-                for(DirectionsRoute route: result.routes){
 
-                    ArrayList<com.google.maps.model.LatLng> routeLocations = new ArrayList<>();
+                for(DirectionsRoute route: result.routes){
 
                     if(route.legs[0].distance.inMeters <= (mMaximumReach * 100)) {
 
@@ -416,24 +451,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
                         List<com.google.android.gms.maps.model.LatLng> newDecodedPath = new ArrayList<>();
 
                         for (com.google.maps.model.LatLng latLng : decodedPath) {
-                            routeLocations.add(latLng);
-                            if(locations.length() != 0) locations += "|";
-                            locations = locations + latLng.lat + "," + latLng.lng;
                             newDecodedPath.add(new com.google.android.gms.maps.model.LatLng(latLng.lat, latLng.lng));
-                        }
-
-                        url += locations + "&key=" + getString(R.string.google_api_key);
-                        StringBuffer response = new StringBuffer();
-                        HttpInformation httpInfo = new HttpInformation(url, response);
-                        new GetHttp().execute(httpInfo);
-                        int ret = httpInfo.value;
-                        int batteryLevel = 0;
-                        if (ret == 0) {
-                            try {
-                                batteryLevel = getBatteryLevelAtDestination(new JSONObject(response.toString()).getJSONArray("results"), routeLocations);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
                         }
 
                         Polyline polyline = mMap.addPolyline(new PolylineOptions().addAll(newDecodedPath));
@@ -447,11 +465,13 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
 
                         double tempDuration = route.legs[0].duration.inSeconds;
 
-                        if (tempDuration < duration) {
+                        if ((tempDuration < duration)){
                             duration = tempDuration;
                             onPolylineClick(polyline);
                             zoomRoute(polyline.getPoints());
                         }
+                    } else {
+                        showMessage("There are no available charging stations!");
                     }
 
                 }
@@ -459,31 +479,63 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         });
     }
 
-    public int getBatteryLevelAtDestination(JSONArray results, ArrayList<com.google.maps.model.LatLng> routeLocations){
-        ArrayList<Integer> elevationLevels = new ArrayList<>();
+    public int getElevationInformation(Marker selectedMarker){
+        String request = "https://maps.googleapis.com/maps/api/elevation/json?locations=" + selectedMarker.getPosition().latitude
+                + "," + selectedMarker.getPosition().longitude + "&key=" + getString(R.string.google_api_key);
+        StringBuffer response = new StringBuffer();
+        HttpInformation httpInfo = new HttpInformation(request, response);
+        new GetHttp().execute(httpInfo);
+        int ret = httpInfo.value;
+        int batteryLevel = 0;
+        if (ret == 0) {
+            try {
+                batteryLevel = getBatteryLevelAtDestination(new JSONObject(response.toString()).getJSONArray("results"), selectedMarker);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return batteryLevel;
+    }
+
+    public int getBatteryLevelAtDestination(JSONArray results, Marker selectedMarker){
+        ArrayList<Float> elevationLevels = new ArrayList<>();
         for(int i = 0; i<results.length(); i++){
             try {
-                elevationLevels.add(Integer.parseInt(results.getJSONObject(i).getString("elevation")));
+                elevationLevels.add(Float.valueOf(results.getJSONObject(i).getString("elevation")));
             } catch (JSONException e) {
                 Log.d(TAG, "getBatteryLevelAtDestination: " + e.getMessage());
                 e.printStackTrace();
             }
         }
 
-        int batteryLevelAtDestination = mCurrentBatteryLevel;
-
-        for(int i = 0; i < elevationLevels.size() - 1; i++){
-            int elevation = Math.round(elevationLevels.get(i) - elevationLevels.get(i+1));
-            int distance = getDistanceBetweenTwoPoints(routeLocations.get(i), routeLocations.get(i+1));
-            if(elevation > 0){
-                int slope = (elevation / distance);
-                batteryLevelAtDestination = (int) Math.round(batteryLevelAtDestination + (distance * slope * 0.80));
-            } else {
-                batteryLevelAtDestination = (int) Math.round(batteryLevelAtDestination - (distance * consumptionPerMeters));
-            }
+        double batteryLevelAtDestination = mCurrentBatteryLevel;
+        double elevation = elevationLevels.get(1) - elevationLevels.get(0);
+        int distance = Math.abs(getDistanceBetweenTwoPoints(selectedMarker));
+        double slope = (elevation / distance);
+        if (slope > 0) {
+            batteryLevelAtDestination = batteryLevelAtDestination + (((((elevation / distance) * 9.8) * 1500) * 13.33) * 0.8);
         }
-        return batteryLevelAtDestination;
+
+        batteryLevelAtDestination = batteryLevelAtDestination - (distance * Constants.getConsumptionPerMeter());
+
+        if (batteryLevelAtDestination>Constants.getMaximumBatteryCapacity()){
+            batteryLevelAtDestination = Constants.getMaximumBatteryCapacity();
+        }
+
+        return (int) batteryLevelAtDestination;
     }
+
+    private int getDistanceBetweenTwoPoints(Marker selected){
+        Location destination = new Location("Point A");
+        destination.setLatitude(selected.getPosition().latitude);
+        destination.setLongitude(selected.getPosition().longitude);
+        Location currentLocation = new Location("Point B");
+        currentLocation.setLatitude(mLocation.getLatitude());
+        currentLocation.setLongitude(mLocation.getLongitude());
+        return Math.round(destination.distanceTo(currentLocation));
+    }
+
 
     private void getMaximumReach(){
         mMaximumReach = Math.round((mCurrentBatteryLevel * Constants.getMaximumDistance())) * 10;
@@ -616,16 +668,6 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
 
     private void showMessage(String str){
         Toast.makeText(getApplicationContext(), str, Toast.LENGTH_SHORT).show();
-    }
-
-    private int getDistanceBetweenTwoPoints(com.google.maps.model.LatLng a, com.google.maps.model.LatLng b){
-        Location locationA = new Location("Point A");
-        locationA.setLatitude(a.lat);
-        locationA.setLongitude(a.lng);
-        Location locationB = new Location("Point B");
-        locationB.setLatitude(b.lat);
-        locationB.setLongitude(b.lng);
-        return Math.round(locationA.distanceTo(locationB));
     }
 
     public class SnippetInformation{
