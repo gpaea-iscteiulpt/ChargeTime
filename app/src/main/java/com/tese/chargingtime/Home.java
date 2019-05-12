@@ -49,7 +49,7 @@ public class Home extends AppCompatActivity implements GoogleApiClient.OnConnect
                 getSupportFragmentManager().findFragmentById(R.id.input_search);
 
         autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS, Place.Field.LAT_LNG));
-        autocompleteFragment.setCountry("pt");
+        //autocompleteFragment.setCountry("pt");
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
