@@ -89,6 +89,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
     private Location mLocation;
     private Station mClosestStation;
     private float mClosestDistance;
+    private double mTimeToDestination;
 
     private double mBatteryLevelAtDestination;
     private double mMaximumReach;
@@ -167,16 +168,13 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         temp.setLatitude(mDestinationPlace.getLatLng().latitude);
         temp.setLongitude(mDestinationPlace.getLatLng().longitude);
 
-        checkBestStation();
-
-        mMarkerSelected = mMarkersArray.get(0);
-        Location destination = new Location("Marker Selected");
-        destination.setLatitude(mMarkerSelected.getPosition().latitude);
-        destination.setLongitude(mMarkerSelected.getPosition().longitude);
-        mClosestDistance = Math.round(mLocation.distanceTo(destination));
+        DecisionFactor df = checkBestStation();
+        mClosestDistance = (float) df.getDistance();
+        mMarkerSelected = df.getMarker();
+        mTimeToDestination = df.getDuration();
 
         if (mMaximumReach >= mClosestDistance){
-            calculateDirections(mMarkersArray.get(0));
+            calculateDirections(mMarkerSelected);
         }else{
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage("With your current battery level you can't reach the closest charging station on the system. " +
@@ -189,44 +187,66 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         setCameraView(temp);
     }
 
-    private void checkBestStation(){
+    private DecisionFactor checkBestStation(){
 
-        Collections.sort(mMarkersArray, new Comparator<Marker>() {
-
-            @Override
-            public int compare(Marker a, Marker b) {
-                Location locationA = new Location("point A");
-                locationA.setLatitude(a.getPosition().latitude);
-                locationA.setLongitude(a.getPosition().longitude);
-                Location locationB = new Location("point B");
-                locationB.setLatitude(b.getPosition().latitude);
-                locationB.setLongitude(b.getPosition().longitude);
-                float distanceOne = mLocation.distanceTo(locationA);
-                float distanceTwo = mLocation.distanceTo(locationB);
-                return Float.compare(distanceOne, distanceTwo);
-            }
-        });
+        ArrayList<DecisionFactor> decisionFactors = new ArrayList<DecisionFactor>();
 
         //Adicionar aqui os modelos de previsão.
-        //Guardar informação das durações em algum lado para comparar.
-        for(Marker marker : mMarkersArray){
-            getRouteDurationAPI(marker);
+
+        for(Marker marker : mMarkersArray) {
+            Location locationA = new Location("Destination");
+            locationA.setLatitude(marker.getPosition().latitude);
+            locationA.setLongitude(marker.getPosition().longitude);
+            double distance = mLocation.distanceTo(locationA);
+
+            double randomDouble = Math.random();
+            randomDouble = randomDouble * 80 + 1;
+            double duration = getDurationToMarker(marker);
+            decisionFactors.add(new DecisionFactor(duration, randomDouble, distance, marker));
         }
+
+        return returnBestMarker(decisionFactors);
     }
 
-    public double getRouteDurationAPI(Marker marker){
-        String request = "https://maps.googleapis.com/maps/api/elevation/json?origin=" + mLocation.getLatitude() + "," + mLocation.getLongitude() +
-                "&destination=" + marker.getPosition().latitude + "," + marker.getPosition().longitude + "&key=" + getString(R.string.google_api_key);
+    public DecisionFactor returnBestMarker(ArrayList<DecisionFactor> decisionFactors){
+        for(DecisionFactor df : decisionFactors) {
+            df.setWeight(((100 - df.getOccupancy()) * 0.5) + ((5000 - df.getDuration()) * 0.3)
+                    + ((100000 - df.getDistance()) * 0.2));
+        }
+
+        DecisionFactor temp = new DecisionFactor();
+
+        for(int i = 0; i<decisionFactors.size()-1; i++) {
+            DecisionFactor df1 = decisionFactors.get(i);
+            DecisionFactor df2 = decisionFactors.get(i+1);
+            if(df1.getWeight() < df2.getWeight()){
+                temp = df1;
+            }else{
+                temp = df2;
+            }
+         }
+
+
+        return temp;
+    }
+
+    public double getDurationToMarker(Marker marker){
+        double duration = 999999;
+
+        String request = "https://maps.googleapis.com/maps/api/directions/json?origin=" + mLocation.getLatitude() + "," + mLocation.getLongitude() +
+                "&destination=" + marker.getPosition().latitude + "," + marker.getPosition().longitude + "&key=" + getString(R.string.google_maps_key);
         StringBuffer response = new StringBuffer();
         HttpInformation httpInfo = new HttpInformation(request, response);
         new GetHttp().execute(httpInfo);
         int ret = httpInfo.value;
-        double duration = 0;
+        double tempDuration = 0;
         if (ret == 0) {
             try {
                 JSONArray routes = new JSONObject(response.toString()).getJSONArray("routes");
-                duration = getSmallestDuration(routes);
-
+                tempDuration = getSmallestDuration(routes);
+                if(duration > tempDuration){
+                    duration = tempDuration;
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -236,11 +256,14 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
     }
 
     private double getSmallestDuration(JSONArray routes){
-        double duration = 0;
+        double duration = 99999;
         for(int i = 0; i<routes.length(); i++){
+            double tempDuration = 0;
             try {
-                JSONObject obj = routes.getJSONObject(i);
-                Log.d(TAG, obj.toString());
+                tempDuration = routes.getJSONObject(i).getJSONArray("legs").getJSONObject(0).getJSONObject("duration").getDouble("value");
+                if (tempDuration<duration){
+                    duration = tempDuration;
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -399,7 +422,10 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
 
     public void calculateDirections(Marker marker){
 
-        final Marker selectedMarker = marker;
+        final Marker finalMarker = marker;
+
+        final int batteryLevel = getElevationInformation(marker);
+        final int occupancyLevel = getOccupancyLevel();
 
         com.google.maps.model.LatLng destination = new com.google.maps.model.LatLng(
                 marker.getPosition().latitude,
@@ -417,7 +443,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         directions.destination(destination).setCallback(new PendingResult.Callback<DirectionsResult>() {
             @Override
             public void onResult(DirectionsResult result) {
-                addPolylinesToMap(result, selectedMarker);
+                addPolylinesToMap(result, finalMarker, batteryLevel, occupancyLevel);
             }
 
             @Override
@@ -427,8 +453,15 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         });
     }
 
-    private void addPolylinesToMap(final DirectionsResult result, Marker selected){
-        final int batteryLevel = getElevationInformation(selected);
+    public int getOccupancyLevel(){
+        //Adicionar modelos de previsão
+        double randomDouble = Math.random();
+        randomDouble = randomDouble * 75 + 1;
+        return (int) randomDouble;
+    }
+
+    private void addPolylinesToMap(final DirectionsResult result, Marker selected, final int batteryLevel, final int occupancyLevel){
+
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
@@ -455,7 +488,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
                         }
 
                         Polyline polyline = mMap.addPolyline(new PolylineOptions().addAll(newDecodedPath));
-                        mPolylineInformation.put(polyline.getId(), new SnippetInformation(batteryLevel, (int) mCurrentStation.getOccupancy()));
+                        mPolylineInformation.put(polyline.getId(), new SnippetInformation(batteryLevel, occupancyLevel));
 
                         polyline.setClickable(true);
                         polyline.setColor(ContextCompat.getColor(Maps.this, R.color.grey));
@@ -480,8 +513,9 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
     }
 
     public int getElevationInformation(Marker selectedMarker){
-        String request = "https://maps.googleapis.com/maps/api/elevation/json?locations=" + selectedMarker.getPosition().latitude
-                + "," + selectedMarker.getPosition().longitude + "&key=" + getString(R.string.google_api_key);
+        String request = "https://maps.googleapis.com/maps/api/elevation/json?locations=" + mLocation.getLatitude() + "," +
+                mLocation.getLongitude() + "|" + selectedMarker.getPosition().latitude +
+                "," + selectedMarker.getPosition().longitude +  "&key=" + getString(R.string.google_api_key);
         StringBuffer response = new StringBuffer();
         HttpInformation httpInfo = new HttpInformation(request, response);
         new GetHttp().execute(httpInfo);
@@ -500,6 +534,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
 
     public int getBatteryLevelAtDestination(JSONArray results, Marker selectedMarker){
         ArrayList<Float> elevationLevels = new ArrayList<>();
+
         for(int i = 0; i<results.length(); i++){
             try {
                 elevationLevels.add(Float.valueOf(results.getJSONObject(i).getString("elevation")));
@@ -509,18 +544,20 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
             }
         }
 
-        double batteryLevelAtDestination = mCurrentBatteryLevel;
+        double batteryLevelAtDestination = 0;
         double elevation = elevationLevels.get(1) - elevationLevels.get(0);
         int distance = Math.abs(getDistanceBetweenTwoPoints(selectedMarker));
-        double slope = (elevation / distance);
-        if (slope > 0) {
-            batteryLevelAtDestination = batteryLevelAtDestination + (((((elevation / distance) * 9.8) * 1500) * 13.33) * 0.8);
+        double maximumReach = (Constants.getMaximumDistance() * mCurrentBatteryLevel) / 100;
+
+        if (elevation < 0) {
+            maximumReach = maximumReach + (((((elevation / distance) * 9.8) * 1500) * 13.33) * 0.8);
         }
 
-        batteryLevelAtDestination = batteryLevelAtDestination - (distance * Constants.getConsumptionPerMeter());
+        maximumReach = maximumReach - (distance * Constants.getConsumptionPerMeter());
 
-        if (batteryLevelAtDestination>Constants.getMaximumBatteryCapacity()){
-            batteryLevelAtDestination = Constants.getMaximumBatteryCapacity();
+        batteryLevelAtDestination = (maximumReach * 100) / Constants.getMaximumDistance();
+        if (batteryLevelAtDestination > 100){
+            batteryLevelAtDestination = 100;
         }
 
         return (int) batteryLevelAtDestination;
