@@ -164,14 +164,15 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         mDestinationPlace = (Place) getIntent().getParcelableExtra("DestinationPlace");
         Marker newMarker = mMap.addMarker(new MarkerOptions().position(mDestinationPlace.getLatLng()).title(mDestinationPlace.getId()));
         newMarker.setTag("Destination");
-        Location temp = new Location(LocationManager.GPS_PROVIDER);
-        temp.setLatitude(mDestinationPlace.getLatLng().latitude);
-        temp.setLongitude(mDestinationPlace.getLatLng().longitude);
+        Location mDestination = new Location(LocationManager.GPS_PROVIDER);
+        mDestination.setLatitude(mDestinationPlace.getLatLng().latitude);
+        mDestination.setLongitude(mDestinationPlace.getLatLng().longitude);
 
-        DecisionFactor df = checkBestStation();
+        DecisionFactor df = checkBestStation(mDestination);
         mClosestDistance = (float) df.getDistance();
         mMarkerSelected = df.getMarker();
         mTimeToDestination = df.getDuration();
+
 
         if (mMaximumReach >= mClosestDistance){
             calculateDirections(mMarkerSelected);
@@ -184,10 +185,10 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
             AlertDialog alertDialog = builder.create();
             alertDialog.show();
         }
-        setCameraView(temp);
+        setCameraView(mDestination);
     }
 
-    private DecisionFactor checkBestStation(){
+    private DecisionFactor checkBestStation(Location mDestination){
 
         ArrayList<DecisionFactor> decisionFactors = new ArrayList<DecisionFactor>();
 
@@ -199,10 +200,15 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
             locationA.setLongitude(marker.getPosition().longitude);
             double distance = mLocation.distanceTo(locationA);
 
+            Location mDestinationLocation = new Location("Destination");
+            locationA.setLatitude(marker.getPosition().latitude);
+            locationA.setLongitude(marker.getPosition().longitude);
+            double distanceDestinationToCS = mDestination.distanceTo(mDestinationLocation);
+
             double randomDouble = Math.random();
             randomDouble = randomDouble * 80 + 1;
             double duration = getDurationToMarker(marker);
-            decisionFactors.add(new DecisionFactor(duration, randomDouble, distance, marker));
+            decisionFactors.add(new DecisionFactor(duration, randomDouble, distance, distanceDestinationToCS, marker));
         }
 
         return returnBestMarker(decisionFactors);
@@ -211,7 +217,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
     public DecisionFactor returnBestMarker(ArrayList<DecisionFactor> decisionFactors){
         for(DecisionFactor df : decisionFactors) {
             df.setWeight(((100 - df.getOccupancy()) * 0.5) + ((5000 - df.getDuration()) * 0.3)
-                    + ((100000 - df.getDistance()) * 0.2));
+                    + ((100000 - df.getDistanceDestinationToCS()) * 0.2));
         }
 
         DecisionFactor temp = new DecisionFactor();
