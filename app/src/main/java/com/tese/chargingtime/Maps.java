@@ -580,8 +580,17 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         int distance = Math.abs(getDistanceBetweenTwoPoints(selectedMarker));
         double maximumReach = (Constants.getMaximumDistance() * mCurrentBatteryLevel) / 100;
 
-        if (elevation < 0) {
-            maximumReach = maximumReach + (((((elevation / distance) * 9.8) * 1500) * 13.33) * 0.8);
+
+        // 9.8 é a gravidade
+        // 1500 peso do carro
+        // 13.33 m/s máxima de velocidade
+        // 0.8 eficiencia
+        // angleValue é o angulo do percurso
+        double angleValue = Math.atan((elevation / distance));
+        if (elevation > 0) {
+            maximumReach = maximumReach + ((((Math.sin(angleValue) * 9.8) * 1500) * 13.33) * 0.8);
+        } else if(elevation < 0){
+            maximumReach = maximumReach - ((((Math.sin(angleValue) * 9.8) * 1500) * 13.33) * 0.8);
         }
 
         maximumReach = maximumReach - (distance * Constants.getConsumptionPerMeter());
