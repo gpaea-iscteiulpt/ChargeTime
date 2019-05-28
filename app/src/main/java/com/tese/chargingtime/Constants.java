@@ -11,12 +11,12 @@ public class Constants {
     public static int LEAF_BATTERY_CAPACITY = 30;
     public static int LEAF_MAXIMUM_DISTANCE = 172000;
     public static int LEAF_TOTAL_WEIGHT = 1481;
-    public static int LEAF_CONSUMPTION_PER_METER = 0;
+    public static double LEAF_CONSUMPTION_PER_METER = 1.745;
 
     public static int ZOE_BATTERY_CAPACITY = 41;
     public static int ZOE_MAXIMUM_DISTANCE = 400000;
     public static int ZOE_TOTAL_WEIGHT = 1468;
-    public static int ZOE_CONSUMPTION_PER_METER = 0;
+    public static double ZOE_CONSUMPTION_PER_METER = 1.025;
 
     public static int getLeafBatteryCapacity() {
         return LEAF_BATTERY_CAPACITY;
@@ -42,12 +42,12 @@ public class Constants {
         LEAF_TOTAL_WEIGHT = leafTotalWeight;
     }
 
-    public static int getLeafConsumptionPerMeter() {
-        return LEAF_BATTERY_CAPACITY / (LEAF_MAXIMUM_DISTANCE * 100);
+    public static double getLeafConsumptionPerMeter() {
+        return LEAF_CONSUMPTION_PER_METER;
     }
 
-    public static void setLeafConsumptionPerMeter(int leafConsumptionPerMeter) {
-        LEAF_CONSUMPTION_PER_METER = LEAF_BATTERY_CAPACITY / (LEAF_MAXIMUM_DISTANCE * 100);
+    public static void setLeafConsumptionPerMeter(double leafConsumptionPerMeter) {
+        LEAF_CONSUMPTION_PER_METER = leafConsumptionPerMeter;
     }
 
     public static int getZoeBatteryCapacity() {
@@ -74,12 +74,12 @@ public class Constants {
         ZOE_TOTAL_WEIGHT = zoeTotalWeight;
     }
 
-    public static int getZoeConsumptionPerMeter() {
-        return ZOE_BATTERY_CAPACITY / (ZOE_MAXIMUM_DISTANCE * 100);
+    public static double getZoeConsumptionPerMeter() {
+        return ZOE_CONSUMPTION_PER_METER;
     }
 
-    public static void setZoeConsumptionPerMeter(int zoeConsumptionPerMeter) {
-        ZOE_CONSUMPTION_PER_METER = ZOE_BATTERY_CAPACITY / (ZOE_MAXIMUM_DISTANCE * 100);
+    public static void setZoeConsumptionPerMeter(double zoeConsumptionPerMeter) {
+        ZOE_CONSUMPTION_PER_METER = zoeConsumptionPerMeter;
     }
 
     //public static String USERNAME = "";

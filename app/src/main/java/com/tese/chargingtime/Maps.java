@@ -137,9 +137,9 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         //mLocation = (Location) getIntent().getParcelableExtra("LastLocation");
-        Location newLocation = new Location("West Pitkerro Industrial Estate");
-        newLocation.setLatitude(56.483074);
-        newLocation.setLongitude(-2.889284);
+        Location newLocation = new Location("Braemar");
+        newLocation.setLatitude(57.012772);
+        newLocation.setLongitude(-3.405164);
         mLocation = newLocation;
 
         mWhereFrom = (String) getIntent().getStringExtra("WhereFrom");
@@ -519,7 +519,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
                         }
 
                         Polyline polyline = mMap.addPolyline(new PolylineOptions().addAll(newDecodedPath));
-                        mPolylineInformation.put(polyline.getId(), new SnippetInformation(batteryLevel, 11));// Adicionar occupancyLevel));
+                        mPolylineInformation.put(polyline.getId(), new SnippetInformation(batteryLevel, occupancyLevel));// TODO Adicionar occupancyLevel));
 
                         polyline.setClickable(true);
                         polyline.setColor(ContextCompat.getColor(Maps.this, R.color.grey));
@@ -578,24 +578,22 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         double batteryLevelAtDestination = 0;
         double elevation = elevationLevels.get(1) - elevationLevels.get(0);
         int distance = Math.abs(getDistanceBetweenTwoPoints(selectedMarker));
-        double maximumReach = (Constants.getLeafMaximumDistance() * mCurrentBatteryLevel) / 100;
-
+        double maximumReach = (Constants.getZoeMaximumDistance() * mCurrentBatteryLevel) / 100;
 
         // 9.8 é a gravidade
-        // 1500 peso do carro
         // 13.33 m/s máxima de velocidade
         // 0.8 eficiencia
         // angleValue é o angulo do percurso
         double angleValue = Math.atan((elevation / distance));
-        if (elevation > 0) {
-            maximumReach = maximumReach + ((((Math.sin(angleValue) * 9.8) * Constants.getLeafTotalWeight()) * 13.33) * 0.8);
-        } else if(elevation < 0){
-            maximumReach = maximumReach - ((((Math.sin(angleValue) * 9.8) * Constants.getLeafTotalWeight()) * 13.33) * 0.8);
+        if (elevation < 0) {
+            maximumReach = maximumReach + ((((Math.abs(Math.sin(angleValue) * 9.8)) * Constants.getZoeTotalWeight()) * 13.33) * 0.8);
+        } else if(elevation > 0){
+            //maximumReach = maximumReach - ((((Math.sin(angleValue) * 9.8) * Constants.getLeafTotalWeight()) * 13.33) * 0.8);
         }
 
-        maximumReach = maximumReach - (distance * Constants.getLeafConsumptionPerMeter());
+        maximumReach = maximumReach - (distance * Constants.getZoeConsumptionPerMeter());
 
-        batteryLevelAtDestination = (maximumReach * 100) / Constants.getLeafMaximumDistance();
+        batteryLevelAtDestination = (maximumReach * 100) / Constants.getZoeMaximumDistance();
         if (batteryLevelAtDestination > 100){
             batteryLevelAtDestination = 100;
         }
@@ -615,7 +613,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
 
 
     private void getMaximumReach(){
-        mMaximumReach = Math.round((mCurrentBatteryLevel * Constants.getLeafMaximumDistance())) / 100;
+        mMaximumReach = Math.round((mCurrentBatteryLevel * Constants.getZoeMaximumDistance())) / 100;
     }
 
     private void resetMap(){
