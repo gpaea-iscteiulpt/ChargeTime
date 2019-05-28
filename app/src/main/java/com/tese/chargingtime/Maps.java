@@ -578,7 +578,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         double batteryLevelAtDestination = 0;
         double elevation = elevationLevels.get(1) - elevationLevels.get(0);
         int distance = Math.abs(getDistanceBetweenTwoPoints(selectedMarker));
-        double maximumReach = (Constants.getMaximumDistance() * mCurrentBatteryLevel) / 100;
+        double maximumReach = (Constants.getLeafMaximumDistance() * mCurrentBatteryLevel) / 100;
 
 
         // 9.8 é a gravidade
@@ -588,14 +588,14 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         // angleValue é o angulo do percurso
         double angleValue = Math.atan((elevation / distance));
         if (elevation > 0) {
-            maximumReach = maximumReach + ((((Math.sin(angleValue) * 9.8) * 1500) * 13.33) * 0.8);
+            maximumReach = maximumReach + ((((Math.sin(angleValue) * 9.8) * Constants.getLeafTotalWeight()) * 13.33) * 0.8);
         } else if(elevation < 0){
-            maximumReach = maximumReach - ((((Math.sin(angleValue) * 9.8) * 1500) * 13.33) * 0.8);
+            maximumReach = maximumReach - ((((Math.sin(angleValue) * 9.8) * Constants.getLeafTotalWeight()) * 13.33) * 0.8);
         }
 
-        maximumReach = maximumReach - (distance * Constants.getConsumptionPerMeter());
+        maximumReach = maximumReach - (distance * Constants.getLeafConsumptionPerMeter());
 
-        batteryLevelAtDestination = (maximumReach * 100) / Constants.getMaximumDistance();
+        batteryLevelAtDestination = (maximumReach * 100) / Constants.getLeafMaximumDistance();
         if (batteryLevelAtDestination > 100){
             batteryLevelAtDestination = 100;
         }
@@ -615,7 +615,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
 
 
     private void getMaximumReach(){
-        mMaximumReach = Math.round((mCurrentBatteryLevel * Constants.getMaximumDistance())) * 10;
+        mMaximumReach = Math.round((mCurrentBatteryLevel * Constants.getLeafMaximumDistance())) / 100;
     }
 
     private void resetMap(){

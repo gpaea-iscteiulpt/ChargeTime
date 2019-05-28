@@ -8,34 +8,78 @@ public class Constants {
     public static final long UPDATE_INTERVAL = 4000;
     public static final long FASTEST_INTERVAL = 2000;
 
-    public static int CURRENT_BATTERY_LEVEL = 100;
-    public static int MAXIMUM_BATTERY_CAPACITY = 75;
-    public static int MAXIMUM_DISTANCE = 300;
+    public static int LEAF_BATTERY_CAPACITY = 30;
+    public static int LEAF_MAXIMUM_DISTANCE = 172000;
+    public static int LEAF_TOTAL_WEIGHT = 1481;
+    public static int LEAF_CONSUMPTION_PER_METER = 0;
 
-    public static int getMaximumBatteryCapacity() {
-        return MAXIMUM_BATTERY_CAPACITY;
+    public static int ZOE_BATTERY_CAPACITY = 41;
+    public static int ZOE_MAXIMUM_DISTANCE = 400000;
+    public static int ZOE_TOTAL_WEIGHT = 1468;
+    public static int ZOE_CONSUMPTION_PER_METER = 0;
+
+    public static int getLeafBatteryCapacity() {
+        return LEAF_BATTERY_CAPACITY;
     }
 
-    public static void setMaximumBatteryCapacity(int maximumBatteryCapacity) {
-        MAXIMUM_BATTERY_CAPACITY = maximumBatteryCapacity;
+    public static void setLeafBatteryCapacity(int leafBatteryCapacity) {
+        LEAF_BATTERY_CAPACITY = leafBatteryCapacity;
     }
 
-    public static double getConsumptionPerMeter() {
-        return CONSUMPTION_PER_METER;
+    public static int getLeafMaximumDistance() {
+        return LEAF_MAXIMUM_DISTANCE;
     }
 
-    public static void setConsumptionPerMeter(double consumptionPerMeter) {
-        CONSUMPTION_PER_METER = consumptionPerMeter;
+    public static void setLeafMaximumDistance(int leafMaximumDistance) {
+        LEAF_MAXIMUM_DISTANCE = leafMaximumDistance;
     }
 
-    public static double CONSUMPTION_PER_METER = 0.00025;
-
-    public static void setMaximumDistance(int value){
-        MAXIMUM_DISTANCE = value;
+    public static int getLeafTotalWeight() {
+        return LEAF_TOTAL_WEIGHT;
     }
 
-    public static void setCurrentBatteryLevel(int value){
-        CURRENT_BATTERY_LEVEL = value;
+    public static void setLeafTotalWeight(int leafTotalWeight) {
+        LEAF_TOTAL_WEIGHT = leafTotalWeight;
+    }
+
+    public static int getLeafConsumptionPerMeter() {
+        return LEAF_BATTERY_CAPACITY / (LEAF_MAXIMUM_DISTANCE * 100);
+    }
+
+    public static void setLeafConsumptionPerMeter(int leafConsumptionPerMeter) {
+        LEAF_CONSUMPTION_PER_METER = LEAF_BATTERY_CAPACITY / (LEAF_MAXIMUM_DISTANCE * 100);
+    }
+
+    public static int getZoeBatteryCapacity() {
+        return ZOE_BATTERY_CAPACITY;
+    }
+
+    public static void setZoeBatteryCapacity(int zoeBatteryCapacity) {
+        ZOE_BATTERY_CAPACITY = zoeBatteryCapacity;
+    }
+
+    public static int getZoeMaximumDistance() {
+        return ZOE_MAXIMUM_DISTANCE;
+    }
+
+    public static void setZoeMaximumDistance(int zoeMaximumDistance) {
+        ZOE_MAXIMUM_DISTANCE = zoeMaximumDistance;
+    }
+
+    public static int getZoeTotalWeight() {
+        return ZOE_TOTAL_WEIGHT;
+    }
+
+    public static void setZoeTotalWeight(int zoeTotalWeight) {
+        ZOE_TOTAL_WEIGHT = zoeTotalWeight;
+    }
+
+    public static int getZoeConsumptionPerMeter() {
+        return ZOE_BATTERY_CAPACITY / (ZOE_MAXIMUM_DISTANCE * 100);
+    }
+
+    public static void setZoeConsumptionPerMeter(int zoeConsumptionPerMeter) {
+        ZOE_CONSUMPTION_PER_METER = ZOE_BATTERY_CAPACITY / (ZOE_MAXIMUM_DISTANCE * 100);
     }
 
     //public static String USERNAME = "";
@@ -56,13 +100,6 @@ public class Constants {
 
     public static int getUserPoints(){ return USER_POINTS; }
 
-    public static int getCurrentBatteryLevel() {
-        return CURRENT_BATTERY_LEVEL;
-    }
-
-    public static int getMaximumDistance() {
-        return MAXIMUM_DISTANCE;
-    }
 
 
 }
