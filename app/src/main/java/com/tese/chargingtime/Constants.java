@@ -8,15 +8,35 @@ public class Constants {
     public static final long UPDATE_INTERVAL = 4000;
     public static final long FASTEST_INTERVAL = 2000;
 
-    public static int LEAF_BATTERY_CAPACITY = 30;
-    public static int LEAF_MAXIMUM_DISTANCE = 172000;
-    public static int LEAF_TOTAL_WEIGHT = 1481;
-    public static double LEAF_CONSUMPTION_PER_METER = 1.745;
+    public static int LEAF_BATTERY_CAPACITY = 38000;
+    public static int LEAF_MAXIMUM_DISTANCE = 230000;
+    public static int LEAF_TOTAL_WEIGHT = 1580;
+    public static double LEAF_CONSUMPTION_PER_METER = 0.165;
+    public static int LEAF_BATTERY_PERCENTAGE;
 
-    public static int ZOE_BATTERY_CAPACITY = 41;
-    public static int ZOE_MAXIMUM_DISTANCE = 400000;
-    public static int ZOE_TOTAL_WEIGHT = 1468;
-    public static double ZOE_CONSUMPTION_PER_METER = 1.025;
+    public static int ZOE_BATTERY_CAPACITY = 41000;
+    public static int ZOE_MAXIMUM_DISTANCE = 260000;
+    public static int ZOE_TOTAL_WEIGHT = 1455;
+    public static double ZOE_CONSUMPTION_PER_METER = 0.158;
+    public static int ZOE_BATTERY_PERCENTAGE;
+
+    public static int getLeafBatteryPercentage() {
+        return LEAF_BATTERY_PERCENTAGE;
+    }
+
+    public static void setLeafBatteryPercentage(int leafBatteryPercentage) {
+        LEAF_BATTERY_PERCENTAGE = leafBatteryPercentage;
+    }
+
+    public static int getZoeBatteryPercentage() {
+        return ZOE_BATTERY_PERCENTAGE;
+    }
+
+    public static void setZoeBatteryPercentage(int zoeBatteryPercentage) {
+        ZOE_BATTERY_PERCENTAGE = zoeBatteryPercentage;
+    }
+
+    public static double CONVERSION_JOULE_TO_WATTSPERHOUR = 0.000278;
 
     public static int getLeafBatteryCapacity() {
         return LEAF_BATTERY_CAPACITY;

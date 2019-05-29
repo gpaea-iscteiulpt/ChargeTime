@@ -77,8 +77,8 @@ public class Home extends AppCompatActivity implements GoogleApiClient.OnConnect
         intent.putExtra("DestinationPlace", mDestinationPlace);
         intent.putExtra("Stations", mStations);
         EditText btLevel = (EditText) findViewById(R.id.btLvl);
-        Constants.setLeafBatteryCapacity(Integer.parseInt(btLevel.getText().toString()));
-        intent.putExtra("Current Battery Level", Constants.LEAF_BATTERY_CAPACITY);
+        Constants.setZoeBatteryPercentage(Integer.parseInt(btLevel.getText().toString()));
+        intent.putExtra("Current Battery Level", Constants.ZOE_BATTERY_PERCENTAGE);
         startActivity(intent);
     }
 

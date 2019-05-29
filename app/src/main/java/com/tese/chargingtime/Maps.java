@@ -91,7 +91,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
 
     private double mBatteryLevelAtDestination;
     private double mMaximumReach;
-    private int mCurrentBatteryLevel;
+    private int mCurrentBatteryPercentage;
     public Station mCurrentStation;
     public HashMap<String, SnippetInformation> mPolylineInformation = new HashMap<String, SnippetInformation>();
 
@@ -114,7 +114,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mCurrentDateAndTime = Calendar.getInstance().getTime();
         mStations = (ArrayList<Station>) getIntent().getExtras().getSerializable("Stations");
-        mCurrentBatteryLevel = getIntent().getIntExtra("Current Battery Level", 100);
+        mCurrentBatteryPercentage = getIntent().getIntExtra("Current Battery Level", Constants.getZoeBatteryPercentage());
 
         getMaximumReach();
 
@@ -578,17 +578,12 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         double batteryLevelAtDestination = 0;
         double elevation = elevationLevels.get(1) - elevationLevels.get(0);
         int distance = Math.abs(getDistanceBetweenTwoPoints(selectedMarker));
-        double maximumReach = (Constants.getZoeMaximumDistance() * mCurrentBatteryLevel) / 100;
+        double maximumReach = (Constants.getZoeMaximumDistance() * mCurrentBatteryPercentage) / 100;
 
-        // 9.8 é a gravidade
-        // 13.33 m/s máxima de velocidade
-        // 0.8 eficiencia
-        // angleValue é o angulo do percurso
-        double angleValue = Math.atan((elevation / distance));
+        double slope = Math.sin((elevation / distance));
         if (elevation < 0) {
-            maximumReach = maximumReach + ((((Math.abs(Math.sin(angleValue) * 9.8)) * Constants.getZoeTotalWeight()) * 13.33) * 0.8);
-        } else if(elevation > 0){
-            //maximumReach = maximumReach - ((((Math.sin(angleValue) * 9.8) * Constants.getLeafTotalWeight()) * 13.33) * 0.8);
+            double regenerative_braking = (((slope * 9.8) * elevation * Constants.getZoeTotalWeight() * 0.7) * Constants.CONVERSION_JOULE_TO_WATTSPERHOUR);
+            maximumReach = maximumReach + regenerative_braking;
         }
 
         maximumReach = maximumReach - (distance * Constants.getZoeConsumptionPerMeter());
@@ -613,7 +608,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
 
 
     private void getMaximumReach(){
-        mMaximumReach = Math.round((mCurrentBatteryLevel * Constants.getZoeMaximumDistance())) / 100;
+        mMaximumReach = Math.round((mCurrentBatteryPercentage * Constants.getZoeMaximumDistance())) / 100;
     }
 
     private void resetMap(){
