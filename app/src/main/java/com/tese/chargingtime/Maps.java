@@ -114,7 +114,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mCurrentDateAndTime = Calendar.getInstance().getTime();
         mStations = (ArrayList<Station>) getIntent().getExtras().getSerializable("Stations");
-        mCurrentBatteryPercentage = getIntent().getIntExtra("Current Battery Level", Constants.getZoeBatteryPercentage());
+        mCurrentBatteryPercentage = getIntent().getIntExtra("Current Battery Level", Constants.getLeafBatteryPercentage());
 
         getMaximumReach();
 
@@ -137,9 +137,9 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         //mLocation = (Location) getIntent().getParcelableExtra("LastLocation");
-        Location newLocation = new Location("Braemar");
-        newLocation.setLatitude(57.012772);
-        newLocation.setLongitude(-3.405164);
+        Location newLocation = new Location("Leuchars");
+        newLocation.setLatitude(56.380176);
+        newLocation.setLongitude(-2.864631);
         mLocation = newLocation;
 
         mWhereFrom = (String) getIntent().getStringExtra("WhereFrom");
@@ -190,7 +190,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
     private DecisionFactor checkBestStation(Location mDestination){
 
         ArrayList<DecisionFactor> decisionFactors = new ArrayList<DecisionFactor>();
-
+        int i = 0;
         for(Marker marker : mMarkersArray) {
 
             Location chargingStationLocation = new Location("ChargingStationLocation");
@@ -199,14 +199,20 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
             double distance = mLocation.distanceTo(chargingStationLocation);
 
             double distanceDestinationToCS = mDestination.distanceTo(chargingStationLocation);
-
+            double occupancyTemp;
             //Adicionar aqui os modelos de previsão.
-            double randomDouble = Math.random();
-            randomDouble = randomDouble * 50 + 1;
-
+            if(i==0){
+                occupancyTemp = 25;
+            } else if (i==1){
+                occupancyTemp = 18;
+            } else {
+                occupancyTemp = 50;
+            }
             double duration = getDurationToMarker(marker);
 
-            decisionFactors.add(new DecisionFactor(duration, randomDouble, distance, distanceDestinationToCS, marker));
+            decisionFactors.add(new DecisionFactor(duration, occupancyTemp, distance, distanceDestinationToCS, marker));
+
+            i++;
         }
 
         return returnBestMarker(decisionFactors);
@@ -578,17 +584,17 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
         double batteryLevelAtDestination = 0;
         double elevation = elevationLevels.get(1) - elevationLevels.get(0);
         int distance = Math.abs(getDistanceBetweenTwoPoints(selectedMarker));
-        double maximumReach = (Constants.getZoeMaximumDistance() * mCurrentBatteryPercentage) / 100;
+        double maximumReach = (Constants.getLeafMaximumDistance() * mCurrentBatteryPercentage) / 100;
 
         double slope = Math.sin((elevation / distance));
         if (elevation < 0) {
-            double regenerative_braking = (((slope * 9.8) * elevation * Constants.getZoeTotalWeight() * 0.7) * Constants.CONVERSION_JOULE_TO_WATTSPERHOUR);
+            double regenerative_braking = ((Math.abs((slope * 9.8)) * Math.abs(elevation) * Constants.getLeafTotalWeight() * 0.7) * Constants.CONVERSION_JOULE_TO_WATTSPERHOUR);
             maximumReach = maximumReach + regenerative_braking;
         }
 
-        maximumReach = maximumReach - (distance * Constants.getZoeConsumptionPerMeter());
+        maximumReach = maximumReach - (distance * Constants.getLeafConsumptionPerMeter());
 
-        batteryLevelAtDestination = (maximumReach * 100) / Constants.getZoeMaximumDistance();
+        batteryLevelAtDestination = (maximumReach * 100) / Constants.getLeafMaximumDistance();
         if (batteryLevelAtDestination > 100){
             batteryLevelAtDestination = 100;
         }
@@ -608,7 +614,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback, Google
 
 
     private void getMaximumReach(){
-        mMaximumReach = Math.round((mCurrentBatteryPercentage * Constants.getZoeMaximumDistance())) / 100;
+        mMaximumReach = Math.round((mCurrentBatteryPercentage * Constants.getLeafMaximumDistance())) / 100;
     }
 
     private void resetMap(){

@@ -11,13 +11,13 @@ public class Constants {
     public static int LEAF_BATTERY_CAPACITY = 38000;
     public static int LEAF_MAXIMUM_DISTANCE = 230000;
     public static int LEAF_TOTAL_WEIGHT = 1580;
-    public static double LEAF_CONSUMPTION_PER_METER = 0.165;
+    public static double LEAF_CONSUMPTION_PER_METER = 1.65;
     public static int LEAF_BATTERY_PERCENTAGE;
 
     public static int ZOE_BATTERY_CAPACITY = 41000;
     public static int ZOE_MAXIMUM_DISTANCE = 260000;
     public static int ZOE_TOTAL_WEIGHT = 1455;
-    public static double ZOE_CONSUMPTION_PER_METER = 0.158;
+    public static double ZOE_CONSUMPTION_PER_METER = 1.58;
     public static int ZOE_BATTERY_PERCENTAGE;
 
     public static int getLeafBatteryPercentage() {
